@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
-import pymysql
-import xlwt
 import logging
 import os
-from twisted.enterprise import adbapi
 import traceback
-from yzwspider.yzw.items import YzwItem
+
+import pymysql
+import xlwt
+from twisted.enterprise import adbapi
+
+from yzwspiderfork.yzw.items import YzwItem
 
 logger = logging.getLogger("YzwPipeline")
 
@@ -43,7 +45,7 @@ class YzwPipeline(object):
             re = txn.execute(sql)
             sql = self.settings.get("CREATE_TEBLE_SQL").format(self.settings.get("TABLE"))
             re = txn.execute(sql)
-            logger.info("创建表:'%s'成功." % self.settings.get('TABLE'))
+            logger.warning("创建表:'%s'成功." % self.settings.get('TABLE'))
         except Exception as e:
             logger.critical(traceback.format_exc())
 
@@ -57,10 +59,10 @@ class YzwPipeline(object):
         try:
             if self.dbpool:
                 self.dbpool.close()
-                logger.info("数据已存储于数据库" + self.settings.get("DATABASE") + "， 表：" + self.settings.get("TABLE"))
+                logger.warning("数据已存储于数据库" + self.settings.get("DATABASE") + "， 表：" + self.settings.get("TABLE"))
             else:
                 self.wbk.save(self.excelFile)
-                logger.info("excel文件已存储于 " + self.excelFile)
+                logger.warning("excel文件已存储于 " + self.excelFile)
         except Exception as e:
             logger.error(traceback.format_exc())
 

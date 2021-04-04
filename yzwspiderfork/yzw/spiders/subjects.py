@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
-import scrapy
-import traceback
 import os
+import traceback
+
+import scrapy
 
 """
     获取一级学科目录并存储到文件 mySettings.FCSI_File 
@@ -27,6 +28,6 @@ class SubjectsSpider(scrapy.Spider):
             path = os.path.join(self.PROJECT_ROOT, self.settings.get('FCSI_FILE'))
             with open(path, 'w', encoding='utf-8') as f:
                 f.write(str(firstClassSubjectIndex))
-            self.logger.info("一级学科目录抓取完成.")
+            self.logger.warning("一级学科目录抓取完成.")
         except Exception as e:
             self.logger.error(traceback.format_exc())

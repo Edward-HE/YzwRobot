@@ -7,7 +7,7 @@ class YzwItem(scrapy.Item):
     招生单位 = scrapy.Field()
     院校特性 = scrapy.Field()
     院系所 = scrapy.Field()
-    专业  = scrapy.Field()
+    专业 = scrapy.Field()
     研究方向 = scrapy.Field()
     学习方式 = scrapy.Field()
     拟招生人数 = scrapy.Field()

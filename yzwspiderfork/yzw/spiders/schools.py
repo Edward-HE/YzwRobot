@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
-import scrapy
-import re
 import os
+import re
 import traceback
-from yzwspider.yzw.items import YzwItem
+
+import scrapy
+
+from yzwspiderfork.yzw.items import YzwItem
 
 
 class SchoolsSpider(scrapy.Spider):
@@ -14,19 +16,19 @@ class SchoolsSpider(scrapy.Spider):
     st = {}
     PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
     custom_settings = {
-        'STATS_CLASS': 'yzwspider.yzw.collector.YzwCollector',
+        'STATS_CLASS': 'yzwspiderfork.yzw.collector.YzwCollector',
     }
 
     def start_requests(self):
-        self.st = {i : self.settings.attributes[i].value for i in self.settings.attributes.keys() }
+        self.st = {i: self.settings.attributes[i].value for i in self.settings.attributes.keys()}
         path = os.path.join(self.PROJECT_ROOT, self.settings.get('FCSI_FILE'))
         with open(path, 'r', encoding='utf-8') as f:
             self.firstClassSubjectIndex = eval(f.read())
         gen = self.__ssdm_yjxk(self.settings.get('SSDM'), self.settings.get('YJXKDM'))
         for ssdm, yjxkdm in gen:
-            url =  'https://yz.chsi.com.cn/zsml/queryAction.do?ssdm={}&dwmc=&mldm={}&mlmc=&yjxkdm={}&pageno=1'\
+            url = 'https://yz.chsi.com.cn/zsml/queryAction.do?ssdm={}&dwmc=&mldm={}&mlmc=&yjxkdm={}&pageno=1' \
                 .format(ssdm, self.settings.get('MLDM'), yjxkdm)
-            yield scrapy.Request(url, meta={'ssdm':ssdm}, callback=self.parse)
+            yield scrapy.Request(url, meta={'ssdm': ssdm}, callback=self.parse)
 
     # 爬取学校目录
     def parse(self, response):
@@ -36,14 +38,14 @@ class SchoolsSpider(scrapy.Spider):
                 schName = school[7:]
                 url = re.sub(r'queryAction', 'querySchAction', response.url)
                 url = re.sub(r'dwmc=', 'dwmc=' + schName, url)
-                yield scrapy.Request(url, meta={'ssdm':response.meta['ssdm']}, callback=self.parse_school)
+                yield scrapy.Request(url, meta={'ssdm': response.meta['ssdm']}, callback=self.parse_school)
             except Exception as e:
                 self.logger.error(traceback.format_exc())
                 continue
         # 翻页
         url = self.__next_page_url(response)
         if url:
-            yield scrapy.Request(url, meta={'ssdm':response.meta['ssdm']}, callback=self.parse)
+            yield scrapy.Request(url, meta={'ssdm': response.meta['ssdm']}, callback=self.parse)
 
     # 爬取学校页面专业信息
     def parse_school(self, response):
@@ -54,14 +56,14 @@ class SchoolsSpider(scrapy.Spider):
                 str = majorInfo[i].css('td::text')[2].extract()
                 majorCode = re.findall(r'\(.*?\)', str)[0][1:-1]
                 url = 'https://yz.chsi.com.cn' + majorInfo[i].css('td')[7].css('a::attr(href)')[0].extract()
-                yield scrapy.Request(url, meta={'ssdm':response.meta['ssdm']}, callback=self.parse_major)
+                yield scrapy.Request(url, meta={'ssdm': response.meta['ssdm']}, callback=self.parse_major)
             except Exception as e:
                 self.logger.error(traceback.format_exc())
                 continue
         # 翻页
         url = self.__next_page_url(response)
         if url:
-            yield scrapy.Request(url, meta={'ssdm':response.meta['ssdm']}, callback=self.parse_school)
+            yield scrapy.Request(url, meta={'ssdm': response.meta['ssdm']}, callback=self.parse_school)
 
     # 爬取专业信息
     def parse_major(self, response):
@@ -70,9 +72,9 @@ class SchoolsSpider(scrapy.Spider):
             province = response.meta['ssdm']
             majorInfo = response.css('table')[0].css('tr')
             examRange = response.xpath('//tbody[re:test(@class,"zsml-res-items")]')
-            for num in range(0,len(examRange)):
+            for num in range(0, len(examRange)):
                 body = examRange[num]
-                item['id'] = response.url[-19:] + str(num+1).zfill(3)
+                item['id'] = response.url[-19:] + str(num + 1).zfill(3)
                 item['招生单位'] = majorInfo[0].css('td::text')[1].extract()[7:]
                 item['院校特性'] = self.__getSchoolFeature(item['招生单位'])
                 item['院系所'] = majorInfo[1].css('td::text')[1].extract()[5:]
@@ -92,7 +94,7 @@ class SchoolsSpider(scrapy.Spider):
                 item['专业代码'] = item['专业'][1:7]
                 item['门类'] = self.settings.get('SUBJECT_INDEX')[item['专业代码'][:2]]
                 item['一级学科'] = self.firstClassSubjectIndex[item['专业代码'][:4]]
-                self.logger.info(item)
+                self.logger.warning(item['招生单位'] + item['研究方向'])
                 yield item
         except Exception as e:
             self.logger.error(traceback.format_exc())
@@ -129,4 +131,3 @@ class SchoolsSpider(scrapy.Spider):
             except Exception as e:
                 self.logger.error(traceback.format_exc())
         return url
-
