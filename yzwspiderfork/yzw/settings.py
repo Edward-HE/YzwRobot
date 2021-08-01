@@ -11,15 +11,20 @@ ITEM_PIPELINES = {
 
 # 日志级别与输出路径
 LOG_LEVEL = 'WARNING'
-# LOG_FILE = 'log.txt'
-LOG_FILE = None
+# LOG_LEVEL = 'INFO'
 
-SSDM = '12'
+LOG_FILE = 'log.txt'
+# LOG_FILE = None
+
+# 省市代码(11)
+SSDM = ''
+# 门类代码(01)
 MLDM = ''
-YJXKDM = '0854'
+# 一级学科代码(0101)
+YJXKDM = ''
 
 # MYSQL
-MYSQL = True
+MYSQL = False
 HOST = 'localhost'
 USER = 'root'
 PASSWORD = '03162532'
@@ -29,7 +34,7 @@ TABLE = 'major'
 CHARSET = 'utf8mb4'
 # EXCEL
 EXCEL_FILE_NAME = "研招网专业信息"
-EXCEL_FILE_PATH = ""
+EXCEL_FILE_PATH = "."
 
 # 固定内容
 FCSI_FILE = 'first_class_subject_index.txt'

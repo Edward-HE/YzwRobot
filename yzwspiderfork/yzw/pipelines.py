@@ -17,7 +17,8 @@ class YzwPipeline(object):
         self.dbpool = pool
         self.settings = settings
         self.excelstyle = self.getExcelStyle()
-        excel_path = os.getcwd() if settings.get("EXCEL_FILE_PATH") == '.' else settings.get("EXCEL_FILE_PATH")
+        excel_path = os.getcwd() if settings.get(
+            "EXCEL_FILE_PATH") == '.' else settings.get("EXCEL_FILE_PATH")
         excel_file = settings.get("EXCEL_FILE_NAME") + '.xls'
         self.excelFile = os.path.join(excel_path, excel_file)
 
@@ -41,9 +42,11 @@ class YzwPipeline(object):
 
     def _create_table(self, txn):
         try:
-            sql = "DROP TABLE IF EXISTS `{0}`".format(self.settings.get("TABLE"))
+            sql = "DROP TABLE IF EXISTS `{0}`".format(
+                self.settings.get("TABLE"))
             re = txn.execute(sql)
-            sql = self.settings.get("CREATE_TEBLE_SQL").format(self.settings.get("TABLE"))
+            sql = self.settings.get("CREATE_TEBLE_SQL").format(
+                self.settings.get("TABLE"))
             re = txn.execute(sql)
             logger.warning("创建表:'%s'成功." % self.settings.get('TABLE'))
         except Exception as e:
@@ -59,7 +62,8 @@ class YzwPipeline(object):
         try:
             if self.dbpool:
                 self.dbpool.close()
-                logger.warning("数据已存储于数据库" + self.settings.get("DATABASE") + "， 表：" + self.settings.get("TABLE"))
+                logger.warning(
+                    "数据已存储于数据库" + self.settings.get("DATABASE") + "， 表：" + self.settings.get("TABLE"))
             else:
                 self.wbk.save(self.excelFile)
                 logger.warning("excel文件已存储于 " + self.excelFile)
@@ -107,7 +111,7 @@ class YzwPipeline(object):
             alignment.horz = xlwt.Alignment.HORZ_CENTER
             style.alignment = alignment
         for i in range(0, YzwItem.fields.__len__()):
-            ret = self.sheet.write(self.row, i, item[self.list[i]], style)
+            ret = self.sheet.write(self.row, i, item[self.list[i]])
         self.row += 1
 
     def getExcelStyle(self):
@@ -166,8 +170,8 @@ class YzwPipeline(object):
         self.sheet.col(15).width = 2000
         self.sheet.col(16).width = 6000
         self.sheet.col(17).width = 10000
-        self.list = ['id', '招生单位', '院校特性', '院系所', '专业', '研究方向', '学习方式', '拟招生人数'
-            , '业务课一', '业务课二', '外语', '政治', '所在地', '专业代码', '指导老师', '门类', '一级学科', '备注']
+        self.list = ['id', '招生单位', '院校特性', '院系所', '专业', '研究方向', '学习方式', '拟招生人数',
+                     '业务课一', '业务课二', '外语', '政治', '所在地', '专业代码', '指导老师', '门类', '一级学科', '备注']
         style = self.getExcelTitleStyle()
         for i in range(0, YzwItem.fields.__len__()):
             self.sheet.write(0, i, self.list[i], style)

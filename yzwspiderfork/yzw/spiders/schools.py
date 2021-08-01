@@ -5,7 +5,8 @@ import traceback
 
 import scrapy
 
-from yzwspiderfork.yzw.items import YzwItem
+from yzw.items import YzwItem
+
 
 
 class SchoolsSpider(scrapy.Spider):
@@ -20,11 +21,13 @@ class SchoolsSpider(scrapy.Spider):
     }
 
     def start_requests(self):
-        self.st = {i: self.settings.attributes[i].value for i in self.settings.attributes.keys()}
+        self.st = {
+            i: self.settings.attributes[i].value for i in self.settings.attributes.keys()}
         path = os.path.join(self.PROJECT_ROOT, self.settings.get('FCSI_FILE'))
         with open(path, 'r', encoding='utf-8') as f:
             self.firstClassSubjectIndex = eval(f.read())
-        gen = self.__ssdm_yjxk(self.settings.get('SSDM'), self.settings.get('YJXKDM'))
+        gen = self.__ssdm_yjxk(self.settings.get(
+            'SSDM'), self.settings.get('YJXKDM'))
         for ssdm, yjxkdm in gen:
             url = 'https://yz.chsi.com.cn/zsml/queryAction.do?ssdm={}&dwmc=&mldm={}&mlmc=&yjxkdm={}&pageno=1' \
                 .format(ssdm, self.settings.get('MLDM'), yjxkdm)
@@ -34,7 +37,8 @@ class SchoolsSpider(scrapy.Spider):
     def parse(self, response):
         for tr in response.xpath('//tbody/tr[not(@class="noResult")]'):
             try:
-                school = tr.xpath('.//a[re:test(@href,"/zsml/querySchAction.do?")]/text()').get()
+                school = tr.xpath(
+                    './/a[re:test(@href,"/zsml/querySchAction.do?")]/text()').get()
                 schName = school[7:]
                 url = re.sub(r'queryAction', 'querySchAction', response.url)
                 url = re.sub(r'dwmc=', 'dwmc=' + schName, url)
@@ -55,7 +59,8 @@ class SchoolsSpider(scrapy.Spider):
             try:
                 str = majorInfo[i].css('td::text')[2].extract()
                 majorCode = re.findall(r'\(.*?\)', str)[0][1:-1]
-                url = 'https://yz.chsi.com.cn' + majorInfo[i].css('td')[7].css('a::attr(href)')[0].extract()
+                url = 'https://yz.chsi.com.cn' + \
+                    majorInfo[i].css('td')[7].css('a::attr(href)')[0].extract()
                 yield scrapy.Request(url, meta={'ssdm': response.meta['ssdm']}, callback=self.parse_major)
             except Exception as e:
                 self.logger.error(traceback.format_exc())
@@ -71,7 +76,8 @@ class SchoolsSpider(scrapy.Spider):
             item = YzwItem()
             province = response.meta['ssdm']
             majorInfo = response.css('table')[0].css('tr')
-            examRange = response.xpath('//tbody[re:test(@class,"zsml-res-items")]')
+            examRange = response.xpath(
+                '//tbody[re:test(@class,"zsml-res-items")]')
             for num in range(0, len(examRange)):
                 body = examRange[num]
                 item['id'] = response.url[-19:] + str(num + 1).zfill(3)
@@ -84,15 +90,21 @@ class SchoolsSpider(scrapy.Spider):
                 item['拟招生人数'] = majorInfo[4].css('td::text')[1].extract()
                 comments = majorInfo[5].css('.zsml-bz::text')
                 item['备注'] = comments[1].get() if len(comments) > 1 else ""
-                item['政治'] = re.sub(r'\s', '', body.css('td::text')[0].extract())
-                item['外语'] = re.sub(r'\s', '', body.css('td::text')[2].extract())
-                item['业务课一'] = re.sub(r'\s', '', body.css('td::text')[3].extract())
-                item['业务课二'] = re.sub(r'\s', '', body.css('td::text')[4].extract())
+                item['政治'] = re.sub(
+                    r'\s', '', body.css('td::text')[0].extract())
+                item['外语'] = re.sub(
+                    r'\s', '', body.css('td::text')[2].extract())
+                item['业务课一'] = re.sub(
+                    r'\s', '', body.css('td::text')[3].extract())
+                item['业务课二'] = re.sub(
+                    r'\s', '', body.css('td::text')[4].extract())
                 item['所在地'] = self.settings.get('PROVINCE_DICT')[province]
-                item['指导老师'] = majorInfo[3].xpath('td')[3].xpath('text()').extract()
+                item['指导老师'] = majorInfo[3].xpath(
+                    'td')[3].xpath('text()').extract()
                 item['指导老师'] = item['指导老师'][0] if item['指导老师'] else ''
                 item['专业代码'] = item['专业'][1:7]
-                item['门类'] = self.settings.get('SUBJECT_INDEX')[item['专业代码'][:2]]
+                item['门类'] = self.settings.get('SUBJECT_INDEX')[
+                    item['专业代码'][:2]]
                 item['一级学科'] = self.firstClassSubjectIndex[item['专业代码'][:4]]
                 self.logger.warning(item['招生单位'] + item['研究方向'])
                 yield item
@@ -104,12 +116,15 @@ class SchoolsSpider(scrapy.Spider):
         if yjxkdm == '' and ssdm == '':
             for province in self.settings.get('PROVINCE_LISE'):
                 for key in self.firstClassSubjectIndex.keys():
-                    if str(key).startswith(self.settings.get('MLDM')): yield province, key
+                    if str(key).startswith(self.settings.get('MLDM')):
+                        yield province, key
         elif yjxkdm == '':
             for key in self.firstClassSubjectIndex.keys():
-                if str(key).startswith(self.settings.get('MLDM')): yield ssdm, key
+                if str(key).startswith(self.settings.get('MLDM')):
+                    yield ssdm, key
         elif ssdm == '':
-            for province in self.settings.get('PROVINCE_LISE'): yield province, yjxkdm
+            for province in self.settings.get('PROVINCE_LISE'):
+                yield province, yjxkdm
         else:
             yield ssdm, yjxkdm
 
@@ -120,9 +135,11 @@ class SchoolsSpider(scrapy.Spider):
     # 获取下一页url
     def __next_page_url(self, response):
         url = ''
-        page = response.xpath('//div[re:test(@class,"zsml-page-box")]/ul/li').css('a::attr(onclick)').extract()
+        page = response.xpath(
+            '//div[re:test(@class,"zsml-page-box")]/ul/li').css('a::attr(onclick)').extract()
         page = page[len(page) - 1]
-        pageButtonLabel = response.xpath('//li[re:test(@class,"lip unable ")]').css('li::attr(class)').extract()
+        pageButtonLabel = response.xpath(
+            '//li[re:test(@class,"lip unable ")]').css('li::attr(class)').extract()
         # 非最后一页
         if pageButtonLabel == [] or pageButtonLabel == ['lip unable lip-first']:
             try:
