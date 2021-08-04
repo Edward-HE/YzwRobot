@@ -1,13 +1,11 @@
 # -*- coding: utf-8 -*-
+import csv
 import logging
 import os
 import traceback
 
 import pymysql
-import xlwt
 from twisted.enterprise import adbapi
-
-from yzwspiderfork.yzw.items import YzwItem
 
 logger = logging.getLogger("YzwPipeline")
 
@@ -16,11 +14,15 @@ class YzwPipeline(object):
     def __init__(self, pool, settings):
         self.dbpool = pool
         self.settings = settings
-        self.excelstyle = self.getExcelStyle()
-        excel_path = os.getcwd() if settings.get(
-            "EXCEL_FILE_PATH") == '.' else settings.get("EXCEL_FILE_PATH")
-        excel_file = settings.get("EXCEL_FILE_NAME") + '.xls'
-        self.excelFile = os.path.join(excel_path, excel_file)
+        # excel_path = os.getcwd() if settings.get(
+        #     "EXCEL_FILE_PATH") == '.' else settings.get("EXCEL_FILE_PATH")
+        # excel_file = settings.get("EXCEL_FILE_NAME") + '.xlsx'
+        # self.excelFile = os.path.join(excel_path, excel_file)
+
+        csv_path = os.getcwd() if settings.get(
+            "CSV_FILE_PATH") == '.' else settings.get("CSV_FILE_PATH")
+        csv_file = settings.get("CSV_FILE_NAME") + '.csv'
+        self.csvFile = os.path.join(csv_path, csv_file)
 
     @classmethod
     def from_settings(cls, settings):
@@ -56,7 +58,8 @@ class YzwPipeline(object):
         if self.dbpool:
             obj = self.dbpool.runInteraction(self._create_table)
         else:
-            self.newExcelFile()
+            # self.newExcelFile()
+            self.newCSVFile()
 
     def close_spider(self, spider):
         try:
@@ -65,8 +68,8 @@ class YzwPipeline(object):
                 logger.warning(
                     "数据已存储于数据库" + self.settings.get("DATABASE") + "， 表：" + self.settings.get("TABLE"))
             else:
-                self.wbk.save(self.excelFile)
-                logger.warning("excel文件已存储于 " + self.excelFile)
+                # self.wbk.save(self.csvFile)
+                logger.warning("excel文件已存储于 " + self.csvFile)
         except Exception as e:
             logger.error(traceback.format_exc())
 
@@ -75,7 +78,7 @@ class YzwPipeline(object):
             if self.dbpool:
                 self.process_mysql(item)
             else:
-                self.process_excel(item)
+                self.process_csv(item)
         except Exception as e:
             logger.critical(traceback.format_exc())
 
@@ -100,81 +103,42 @@ class YzwPipeline(object):
             logger.error("insert to database err: -------------\n" + reason.getErrorMessage() + "\n" + str(
                 reason.getTraceback()))
 
-    def process_excel(self, item):
-        flag = False if (self.row & 1 == 0) else True
-        style = xlwt.XFStyle()
-        if flag:
-            style = self.excelstyle
-        else:
-            style = xlwt.XFStyle()
-            alignment = xlwt.Alignment()
-            alignment.horz = xlwt.Alignment.HORZ_CENTER
-            style.alignment = alignment
-        for i in range(0, YzwItem.fields.__len__()):
-            ret = self.sheet.write(self.row, i, item[self.list[i]])
-        self.row += 1
+    # def process_excel(self, item):
+    #     flag = False if (self.row & 1 == 0) else True
+    #     for i in range(0, YzwItem.fields.__len__()):
+    #         ret = self.sheet.write(self.row, i, item[self.list[i]])
+    #     self.row += 1
+    def process_csv(self, item):
+        with open(self.csvFile, 'a', newline='', encoding='gbk') as csv_file:
+            fieldnames = ['id', '招生单位', '院校特性', '院系所', '专业', '研究方向', '学习方式', '拟招生人数',
+                          '业务课一', '业务课二', '外语', '政治', '所在地', '专业代码', '指导老师', '门类', '一级学科', '备注']
+            writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
+            # writer.writeheader()
+            # for i in range(0, YzwItem.fields.__len__()):
+            writer.writerow(item)
 
-    def getExcelStyle(self):
-        style = xlwt.XFStyle()
-        pattern = xlwt.Pattern()
-        pattern.pattern = xlwt.Pattern.SOLID_PATTERN
-        pattern.pattern_fore_colour = 42
-        style.pattern = pattern
-        borders = xlwt.Borders()
-        borders.top = 1
-        borders.bottom = 1
-        borders.top_colour = 17
-        borders.bottom_colour = 17
-        style.borders = borders
-        alignment = xlwt.Alignment()
-        alignment.horz = xlwt.Alignment.HORZ_CENTER
-        style.alignment = alignment
-        return style
+    # def newExcelFile(self):
+    #     # self.wbk = xlwt.Workbook()
+    #     self.wbk = openpyxl.Workbook()
 
-    def getExcelTitleStyle(self):
-        style = xlwt.XFStyle()
-        pattern = xlwt.Pattern()
-        pattern.pattern = xlwt.Pattern.SOLID_PATTERN
-        pattern.pattern_fore_colour = 17
-        style.pattern = pattern
-        fnt = xlwt.Font()
-        fnt.name = u'黑体'
-        fnt.height = 0X00D9
-        fnt.colour_index = 1
-        fnt.bold = True
-        style.font = fnt
-        alignment = xlwt.Alignment()
-        alignment.horz = xlwt.Alignment.HORZ_CENTER
-        style.alignment = alignment
-        return style
+    #     # self.sheet = self.wbk.add_sheet('Sheet1')
+    #     self.sheet = self.wbk.create_sheet('Sheet1')
 
-    def newExcelFile(self):
-        self.wbk = xlwt.Workbook()
-        self.sheet = self.wbk.add_sheet('Sheet1')
-        self.row = 1
-        self.sheet.col(0).width = 3000
-        self.sheet.col(1).width = 8000
-        self.sheet.col(2).width = 3000
-        self.sheet.col(3).width = 10000
-        self.sheet.col(4).width = 7000
-        self.sheet.col(5).width = 10000
-        self.sheet.col(6).width = 7000
-        self.sheet.col(7).width = 3000
-        self.sheet.col(8).width = 5000
-        self.sheet.col(9).width = 11000
-        self.sheet.col(10).width = 4000
-        self.sheet.col(11).width = 7000
-        self.sheet.col(12).width = 2000
-        self.sheet.col(13).width = 2000
-        self.sheet.col(14).width = 2000
-        self.sheet.col(15).width = 2000
-        self.sheet.col(16).width = 6000
-        self.sheet.col(17).width = 10000
+    #     self.row = 1
+
+    #     self.list = ['id', '招生单位', '院校特性', '院系所', '专业', '研究方向', '学习方式', '拟招生人数',
+    #                  '业务课一', '业务课二', '外语', '政治', '所在地', '专业代码', '指导老师', '门类', '一级学科', '备注']
+    #     for i in range(0, YzwItem.fields.__len__()):
+    #         self.sheet.write(0, i, self.list[i])
+
+    def newCSVFile(self):
         self.list = ['id', '招生单位', '院校特性', '院系所', '专业', '研究方向', '学习方式', '拟招生人数',
                      '业务课一', '业务课二', '外语', '政治', '所在地', '专业代码', '指导老师', '门类', '一级学科', '备注']
-        style = self.getExcelTitleStyle()
-        for i in range(0, YzwItem.fields.__len__()):
-            self.sheet.write(0, i, self.list[i], style)
+        with open(self.csvFile, 'a', newline='', encoding='gbk') as csv_file:
+            fieldnames = ['id', '招生单位', '院校特性', '院系所', '专业', '研究方向', '学习方式', '拟招生人数',
+                          '业务课一', '业务课二', '外语', '政治', '所在地', '专业代码', '指导老师', '门类', '一级学科', '备注']
+            writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
+            writer.writeheader()
 
     @staticmethod
     def __test_mysql_settings(**params):

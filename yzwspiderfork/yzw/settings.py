@@ -11,10 +11,10 @@ ITEM_PIPELINES = {
 
 # 日志级别与输出路径
 LOG_LEVEL = 'WARNING'
-# LOG_LEVEL = 'INFO'
+LOG_LEVEL = 'INFO'
 
 LOG_FILE = 'log.txt'
-# LOG_FILE = None
+LOG_FILE = None
 
 # 省市代码(11)
 SSDM = ''
@@ -33,8 +33,8 @@ DATABASE = 'yzw'
 TABLE = 'major'
 CHARSET = 'utf8mb4'
 # EXCEL
-EXCEL_FILE_NAME = "研招网专业信息"
-EXCEL_FILE_PATH = "."
+CSV_FILE_NAME = "0802"
+CSV_FILE_PATH = "."
 
 # 固定内容
 FCSI_FILE = 'first_class_subject_index.txt'
