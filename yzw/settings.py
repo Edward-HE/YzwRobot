@@ -1,40 +1,23 @@
 # -*- coding: utf-8 -*-
 
-
-BOT_NAME = 'yzw'
-SPIDER_MODULES = ['yzwspiderfork.yzw.spiders']
-USER_AGENT = 'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36'
-CONCURRENT_REQUESTS = 32
-ITEM_PIPELINES = {
-    'yzwspiderfork.yzw.pipelines.YzwPipeline': 300,
-}
-
-# 日志级别与输出路径
-LOG_LEVEL = 'WARNING'
-LOG_LEVEL = 'INFO'
-
-LOG_FILE = 'log.txt'
-LOG_FILE = None
+############################################
+#           改动的地方，其他不要改动            #
+#          这里可以指定程序爬取内容范围          #
+# 例如：
+# 1. 爬取北京地区所有数据，SSDM='11',其他还是空，省份对应在下面有
+# 2. 爬取全国所有工学门类数据，MLDM='08',其他还是空
+# 3. 爬取全部数据，三项都置为空即可
 
 # 省市代码(11)
-SSDM = ''
+SSDM = '54'
 # 门类代码(01)
 MLDM = ''
 # 一级学科代码(0101)
 YJXKDM = ''
-
-# MYSQL
-MYSQL = False
-HOST = 'localhost'
-USER = 'root'
-PASSWORD = '03162532'
-PORT = 3306
-DATABASE = 'yzw'
-TABLE = 'major'
-CHARSET = 'utf8mb4'
-# EXCEL
-CSV_FILE_NAME = "0802"
+# 输出 CSV 文件名及目录
+CSV_FILE_NAME = "研招网数据"
 CSV_FILE_PATH = "."
+############################################
 
 # 固定内容
 FCSI_FILE = 'first_class_subject_index.txt'
@@ -48,6 +31,8 @@ PROVINCE_DICT = {'35': '福建', '21': '辽宁', '51': '四川', '34': '安徽',
                  '36': '江西', '52': '贵州', '50': '重庆', '44': '广东', '32': '江苏', '53': '云南', '71': '香港', '11': '北京',
                  '31': '上海',
                  '23': '黑龙江', '62': '甘肃', '22': '吉林', '65': '新疆', '43': '湖南', '15': '内蒙古', '12': '天津'}
+SUBJECT_INDEX = {'01': '哲学', '02': '经济学', '03': '法学', '04': '教育学', '05': '文学', '06': '历史学', '07': '理学',
+                 '08': '工学', '09': '农学', '10': '医学', '11': '军事学', '12': '管理学', '13': '艺术学'}
 SCHOOL_FEATURE = {'北京大学': '985(自划线)', '中国人民大学': '985(自划线)', '清华大学': '985(自划线)', '北京交通大学': '211', '北京工业大学': '211',
                   '北京航空航天大学': '985(自划线)', '北京理工大学': '985(自划线)', '北京科技大学': '211', '北京化工大学': '211', '北京邮电大学': '211',
                   '中国农业大学': '985(自划线)', '北京林业大学': '211', '北京中医药大学': '211', '北京师范大学': '985(自划线)', '北京外国语大学': '211',
@@ -72,25 +57,18 @@ SCHOOL_FEATURE = {'北京大学': '985(自划线)', '中国人民大学': '985(�
                   '西北工业大学': '985(自划线)', '西安电子科技大学': '211', '长安大学': '211', '西北农林科技大学': '985', '陕西师范大学': '211',
                   '第四军医大学': '211', '兰州大学': '985(自划线)', '青海大学': '211', '宁夏大学': '211', '新疆大学': '211', '石河子大学': '211',
                   '国防科技大学': '985'}
-SUBJECT_INDEX = {'01': '哲学', '02': '经济学', '03': '法学', '04': '教育学', '05': '文学', '06': '历史学', '07': '理学',
-                 '08': '工学', '09': '农学', '10': '医学', '11': '军事学', '12': '管理学', '13': '艺术学'}
 
-CREATE_TEBLE_SQL = "CREATE TABLE `{0}` (" \
-                   "`id` char(22) PRIMARY KEY,`招生单位` varchar(40) NOT NULL," \
-                   "`院校特性` varchar(10) DEFAULT NULL," \
-                   "`院系所` varchar(100) DEFAULT NULL," \
-                   "`专业` varchar(40) DEFAULT NULL," \
-                   "`研究方向` TEXT DEFAULT NULL," \
-                   "`学习方式` varchar(30) DEFAULT NULL," \
-                   "`拟招生人数` varchar(40) DEFAULT NULL," \
-                   "`备注` TEXT DEFAULT NULL," \
-                   "`业务课一` varchar(40) DEFAULT NULL," \
-                   "`业务课二` varchar(40) DEFAULT NULL," \
-                   "`外语` varchar(40) DEFAULT NULL," \
-                   "`政治` varchar(40) DEFAULT NULL," \
-                   "`所在地` varchar(30) DEFAULT NULL," \
-                   "`指导老师` TEXT DEFAULT NULL," \
-                   "`专业代码` varchar(10) DEFAULT NULL," \
-                   "`门类` varchar(20) DEFAULT NULL," \
-                   "`一级学科` varchar(40) DEFAULT NULL)" \
-                   " ENGINE=MyISAM DEFAULT CHARSET=utf8"
+BOT_NAME = 'yzw'
+SPIDER_MODULES = ['yzw.spiders']
+USER_AGENT = 'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36'
+CONCURRENT_REQUESTS = 32
+ITEM_PIPELINES = {
+    'yzw.pipelines.YzwPipeline': 300,
+}
+
+# 日志级别与输出路径
+LOG_LEVEL = 'WARNING'
+LOG_LEVEL = 'INFO'
+
+# LOG_FILE = 'log.txt'
+LOG_FILE = None

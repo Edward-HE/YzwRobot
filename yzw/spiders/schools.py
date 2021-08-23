@@ -8,7 +8,6 @@ import scrapy
 from yzw.items import YzwItem
 
 
-
 class SchoolsSpider(scrapy.Spider):
     name = 'schools'
     allowed_domains = ['chsi.com.cn']
@@ -17,7 +16,7 @@ class SchoolsSpider(scrapy.Spider):
     st = {}
     PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
     custom_settings = {
-        'STATS_CLASS': 'yzwspiderfork.yzw.collector.YzwCollector',
+        'STATS_CLASS': 'yzw.collector.YzwCollector',
     }
 
     def start_requests(self):
@@ -39,9 +38,9 @@ class SchoolsSpider(scrapy.Spider):
             try:
                 school = tr.xpath(
                     './/a[re:test(@href,"/zsml/querySchAction.do?")]/text()').get()
-                schName = school[7:]
+                sch_name = school[7:]
                 url = re.sub(r'queryAction', 'querySchAction', response.url)
-                url = re.sub(r'dwmc=', 'dwmc=' + schName, url)
+                url = re.sub(r'dwmc=', 'dwmc=' + sch_name, url)
                 yield scrapy.Request(url, meta={'ssdm': response.meta['ssdm']}, callback=self.parse_school)
             except Exception as e:
                 self.logger.error(traceback.format_exc())
@@ -53,14 +52,14 @@ class SchoolsSpider(scrapy.Spider):
 
     # 爬取学校页面专业信息
     def parse_school(self, response):
-        majorInfo = response.css('table').css('tr')
-        n = len(majorInfo)
+        major_info = response.css('table').css('tr')
+        n = len(major_info)
         for i in range(1, n):
             try:
-                str = majorInfo[i].css('td::text')[2].extract()
-                majorCode = re.findall(r'\(.*?\)', str)[0][1:-1]
+                str = major_info[i].css('td::text')[2].extract()
+                major_code = re.findall(r'\(.*?\)', str)[0][1:-1]
                 url = 'https://yz.chsi.com.cn' + \
-                    majorInfo[i].css('td')[7].css('a::attr(href)')[0].extract()
+                      major_info[i].css('td')[7].css('a::attr(href)')[0].extract()
                 yield scrapy.Request(url, meta={'ssdm': response.meta['ssdm']}, callback=self.parse_major)
             except Exception as e:
                 self.logger.error(traceback.format_exc())
@@ -75,20 +74,20 @@ class SchoolsSpider(scrapy.Spider):
         try:
             item = YzwItem()
             province = response.meta['ssdm']
-            majorInfo = response.css('table')[0].css('tr')
-            examRange = response.xpath(
+            major_info = response.css('table')[0].css('tr')
+            exam_range = response.xpath(
                 '//tbody[re:test(@class,"zsml-res-items")]')
-            for num in range(0, len(examRange)):
-                body = examRange[num]
+            for num in range(0, len(exam_range)):
+                body = exam_range[num]
                 item['id'] = response.url[-19:] + str(num + 1).zfill(3)
-                item['招生单位'] = majorInfo[0].css('td::text')[1].extract()[7:]
-                item['院校特性'] = self.__getSchoolFeature(item['招生单位'])
-                item['院系所'] = majorInfo[1].css('td::text')[1].extract()[5:]
-                item['专业'] = majorInfo[2].css('td::text')[1].extract()
-                item['研究方向'] = majorInfo[3].css('td::text')[1].extract()
-                item['学习方式'] = majorInfo[2].css('td::text')[3].extract()
-                item['拟招生人数'] = majorInfo[4].css('td::text')[1].extract()
-                comments = majorInfo[5].css('.zsml-bz::text')
+                item['招生单位'] = major_info[0].css('td::text')[1].extract()[7:]
+                item['院校特性'] = self.__get_school_feature(item['招生单位'])
+                item['院系所'] = major_info[1].css('td::text')[1].extract()[5:]
+                item['专业'] = major_info[2].css('td::text')[1].extract()
+                item['研究方向'] = major_info[3].css('td::text')[1].extract()
+                item['学习方式'] = major_info[2].css('td::text')[3].extract()
+                item['拟招生人数'] = major_info[4].css('td::text')[1].extract()
+                comments = major_info[5].css('.zsml-bz::text')
                 item['备注'] = comments[1].get() if len(comments) > 1 else ""
                 item['政治'] = re.sub(
                     r'\s', '', body.css('td::text')[0].extract())
@@ -99,7 +98,7 @@ class SchoolsSpider(scrapy.Spider):
                 item['业务课二'] = re.sub(
                     r'\s', '', body.css('td::text')[4].extract())
                 item['所在地'] = self.settings.get('PROVINCE_DICT')[province]
-                item['指导老师'] = majorInfo[3].xpath(
+                item['指导老师'] = major_info[3].xpath(
                     'td')[3].xpath('text()').extract()
                 item['指导老师'] = item['指导老师'][0] if item['指导老师'] else ''
                 item['专业代码'] = item['专业'][1:7]
@@ -129,8 +128,8 @@ class SchoolsSpider(scrapy.Spider):
             yield ssdm, yjxkdm
 
     # 判断学校性质
-    def __getSchoolFeature(self, schName):
-        return self.settings.get('SCHOOL_FEATURE').get(schName, "")
+    def __get_school_feature(self, sch_name):
+        return self.settings.get('SCHOOL_FEATURE').get(sch_name, "")
 
     # 获取下一页url
     def __next_page_url(self, response):
@@ -138,13 +137,13 @@ class SchoolsSpider(scrapy.Spider):
         page = response.xpath(
             '//div[re:test(@class,"zsml-page-box")]/ul/li').css('a::attr(onclick)').extract()
         page = page[len(page) - 1]
-        pageButtonLabel = response.xpath(
+        page_button_label = response.xpath(
             '//li[re:test(@class,"lip unable ")]').css('li::attr(class)').extract()
         # 非最后一页
-        if pageButtonLabel == [] or pageButtonLabel == ['lip unable lip-first']:
+        if page_button_label == [] or page_button_label == ['lip unable lip-first']:
             try:
-                nextPage = re.findall(r'\(.*?\)', page)[0][1:-1]
-                url = re.sub(r'pageno=\d*', 'pageno=' + nextPage, response.url)
+                next_page = re.findall(r'\(.*?\)', page)[0][1:-1]
+                url = re.sub(r'pageno=\d*', 'pageno=' + next_page, response.url)
             except Exception as e:
                 self.logger.error(traceback.format_exc())
         return url
