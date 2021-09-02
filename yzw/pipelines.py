@@ -2,6 +2,7 @@
 import csv
 import logging
 import os
+import time
 import traceback
 
 logger = logging.getLogger("YzwPipeline")
@@ -13,7 +14,7 @@ class YzwPipeline(object):
                      '业务课一', '业务课二', '外语', '政治', '所在地', '专业代码', '指导老师', '门类', '一级学科', '备注']
         csv_path = os.getcwd() if settings.get(
             "CSV_FILE_PATH") == '.' else settings.get("CSV_FILE_PATH")
-        csv_file = settings.get("CSV_FILE_NAME") + '.csv'
+        csv_file = settings.get("CSV_FILE_NAME") + time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime()) + '.csv'
         self.csvFile = os.path.join(csv_path, csv_file)
 
     @classmethod
