@@ -68,7 +68,7 @@ ITEM_PIPELINES = {
 
 # 日志级别与输出路径
 LOG_LEVEL = 'WARNING'
-LOG_LEVEL = 'INFO'
+# LOG_LEVEL = 'INFO'
 
 # LOG_FILE = 'log.txt'
 LOG_FILE = None

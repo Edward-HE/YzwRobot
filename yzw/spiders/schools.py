@@ -83,11 +83,11 @@ class SchoolsSpider(scrapy.Spider):
                 item['招生单位'] = major_info[0].css('td::text')[1].extract()[7:]
                 item['院校特性'] = self.__get_school_feature(item['招生单位'])
                 item['院系所'] = major_info[1].css('td::text')[1].extract()[5:]
-                item['专业'] = major_info[2].css('td::text')[1].extract()
-                item['研究方向'] = major_info[3].css('td::text')[1].extract()
-                item['学习方式'] = major_info[2].css('td::text')[3].extract()
-                item['拟招生人数'] = major_info[4].css('td::text')[1].extract()
-                comments = major_info[5].css('.zsml-bz::text')
+                item['专业'] = major_info[1].css('td::text')[-1].extract()
+                item['研究方向'] = major_info[2].css('td::text')[-1].extract()
+                item['学习方式'] = major_info[2].css('td::text')[1].extract()
+                item['拟招生人数'] = major_info[3].css('td::text')[-1].extract()
+                comments = major_info[4].css('.zsml-bz::text')
                 item['备注'] = comments[1].get() if len(comments) > 1 else ""
                 item['政治'] = re.sub(
                     r'\s', '', body.css('td::text')[0].extract())
@@ -99,7 +99,7 @@ class SchoolsSpider(scrapy.Spider):
                     r'\s', '', body.css('td::text')[4].extract())
                 item['所在地'] = self.settings.get('PROVINCE_DICT')[province]
                 item['指导老师'] = major_info[3].xpath(
-                    'td')[3].xpath('text()').extract()
+                    'td')[1].xpath('text()').extract()
                 item['指导老师'] = item['指导老师'][0] if item['指导老师'] else ''
                 item['专业代码'] = item['专业'][1:7]
                 item['门类'] = self.settings.get('SUBJECT_INDEX')[

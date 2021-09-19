@@ -4,6 +4,7 @@ import logging
 import os
 import time
 import traceback
+import yzw.csv_xlsx as csv2ex
 
 logger = logging.getLogger("YzwPipeline")
 
@@ -28,6 +29,8 @@ class YzwPipeline(object):
     def close_spider(self, spider):
         try:
             logger.warning(" csv 文件已存储于 " + self.csvFile)
+            csv2ex.sub_main(self.csvFile)
+
         except Exception as e:
             logger.error(traceback.format_exc())
 
